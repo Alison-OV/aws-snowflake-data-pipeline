@@ -1,0 +1,2 @@
+mkdir -p s3_bucket/raw
+cp data/sales_data.csv s3_bucket/raw/
