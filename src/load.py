@@ -1,23 +1,37 @@
-import snowflake.connector
+import pandas as pd
+from snowflake.connector import connect
 
-def load_to_snowflake(df):
-    print("Loading data into Snowflake...")
+def load_to_csv(df, output_file):
+    """
+    Guarda el DataFrame transformado en CSV local
+    """
+    df.to_csv(output_file, index=False)
+    print(f"Datos cargados en {output_file}")
 
-    conn = snowflake.connector.connect(
-        user="_USER",
-        password="_PASSWORD",
-        account="_ACCOUNT",
-        warehouse="_WH",
-        database="_DB",
-        schema="PUBLIC"
+def load_to_snowflake(df, user, password, account, warehouse, database, schema, table):
+    """
+    Carga un DataFrame a Snowflake
+    """
+    conn = connect(
+        user=user,
+        password=password,
+        account=account,
+        warehouse=warehouse,
+        database=database,
+        schema=schema
     )
-
-    cursor = conn.cursor()
-
-    for _, row in df.iterrows():
-        cursor.execute("""
-            INSERT INTO SALES VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-        """, tuple(row))
-
-    cursor.close()
+    
+    success, nchunks, nrows, _ = df.to_sql(
+        table,
+        con=conn,
+        index=False,
+        if_exists='append',  # o 'replace' según necesidad
+        method='multi'
+    )
+    
+    print(f"{nrows} filas cargadas a Snowflake en la tabla {table}")
     conn.close()
+
+if __name__ == "__main__":
+    df = pd.read_csv("processed/data_transformed.csv")
+    load_to_csv(df, "processed/data_final.csv")
