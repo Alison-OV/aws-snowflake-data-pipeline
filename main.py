@@ -1,22 +1,12 @@
-from src.extract import run_extract
-from src.transform import run_transform
-from src.load import run_load
+from src.extract import extract_from_s3
+from src.transform import transform_data
+from src.load import load_to_csv
 
+BUCKET_NAME = "tu-bucket"
+FILE_KEY = "raw/data.csv"
+AWS_ACCESS_KEY_ID = "TU_ACCESS_KEY"
+AWS_SECRET_ACCESS_KEY = "TU_SECRET_KEY"
 
-def main():
-    print("Starting data pipeline...")
-
-    print("Extract phase started")
-    run_extract()
-
-    print("Transform phase started")
-    run_transform()
-
-    print("Load phase started")
-    run_load()
-
-    print("Data pipeline finished successfully")
-
-
-if __name__ == "__main__":
-    main()
+df_raw = extract_from_s3(BUCKET_NAME, FILE_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+df_transformed = transform_data(df_raw)
+load_to_csv(df_transformed, "processed/data_final.csv")
